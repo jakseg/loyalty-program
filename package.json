@@ -1,0 +1,36 @@
+{
+  "name": "loyalty-program",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "coverage": "hardhat coverage",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "console": "hardhat console --network localhost",
+    "setup": "npm install && cp .env.example .env && npm run compile && echo '✅ Setup complete! Your .env file has been created. Run npm run node to start development.'",
+    "clean": "npx hardhat clean && rm -rf node_modules && rm package-lock.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakseg/loyalty-program.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jakseg/loyalty-program/issues"
+  },
+  "homepage": "https://github.com/jakseg/loyalty-program#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.3.0",
+    "@openzeppelin/hardhat-upgrades": "^3.9.0",
+    "dotenv": "^16.5.0",
+    "hardhat": "^2.24.3"
+  }
+}
