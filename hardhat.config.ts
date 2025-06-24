@@ -4,6 +4,8 @@ import "@openzeppelin/hardhat-upgrades";
 
 // Lade environment variables
 require('dotenv').config();
+require('@openzeppelin/hardhat-upgrades');
+
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -54,6 +56,7 @@ const config: HardhatUserConfig = {
     apiKey: process.env.ETHERSCAN_API_KEY
   }
   */
+ 
 };
 
 export default config;
