@@ -10,15 +10,14 @@
 </head>
 <body>
   <h1>Concerts Rewards and Loyalty DApp</h1>
- 
-  <button onclick="connectWallet()">Connect MetaMask</button>
-  <br><br> 
-  <button onclick="redeemReward()">Redeem Reward</button>
 
+  <button onclick="connectWallet()">Connect MetaMask</button>
+  <br><br>
+  <button onclick="redeemReward()">Redeem Reward</button>
 
   <p id="message"></p>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="script.js"></script>
+  <!-- ✅ Load your main logic as a module -->
+  <script type="module" src="./script.js"></script>
 </body>
 </html>

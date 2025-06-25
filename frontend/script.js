@@ -1,70 +1,77 @@
+import { ethers } from "https://esm.sh/ethers@6.7.0";
+
 let provider, signer, contract;
-const contractAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F"; // change when redeploying
 let contractAbi = [];
+let contractReady = false;
 
-// ✅ Fetch the ABI (must be valid JSON with no comments or trailing commas)
+const contractAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+
+// 🔁 Try to initialize contract when conditions are ready
+function initializeContractIfReady() {
+  debugger
+  if (signer && contractAbi.length > 0 && !contractReady) {
+    contract = new ethers.Contract(contractAddress, contractAbi, signer);
+    contractReady = true;
+    console.log("✅ Contract initialized");
+    console.log("🧠 Contract functions:", Object.keys(contract.functions));
+  }
+}
+
+// 🔄 Load ABI
 fetch("abi.json")
-  .then((res) => res.json())
-  .then((data) => {
-    contractAbi = data;
-
-    // ✅ Initialize contract only if signer is already available (after connectWallet)
-    if (signer) {
-      contract = new ethers.Contract(contractAddress, contractAbi, signer);
-    }
-
-    console.log("✅ ABI loaded. You can now connect your wallet.");
+  .then(res => res.json())
+  .then(data => {
+    contractAbi = data.abi;  // ✅ Fix: extract the array
+    console.log("✅ ABI loaded:", contractAbi.length, "functions");
+    initializeContractIfReady();
   })
-  .catch((err) => {
+  .catch(err => {
     console.error("❌ Failed to load ABI:", err);
-    document.getElementById("message").innerText = "❌ Failed to load ABI. Check console.";
+    document.getElementById("message").innerText = "❌ Failed to load ABI.";
   });
 
-async function connectWallet() {
+// 🔌 Connect wallet
+window.connectWallet = async function () {
   if (!window.ethereum) {
     alert("MetaMask is not installed.");
     return;
   }
 
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  signer = provider.getSigner();
-
+  provider = new ethers.BrowserProvider(window.ethereum);
+  signer = await provider.getSigner();
   const address = await signer.getAddress();
+
   document.getElementById("message").innerText = "🔗 Connected: " + address;
+  initializeContractIfReady();
+};
 
-  // ✅ If ABI is already loaded, initialize the contract
-  if (contractAbi.length > 0) {
-    contract = new ethers.Contract(contractAddress, contractAbi, signer);
-  } else {
-    console.warn("🕒 ABI not loaded yet. Contract will initialize once it is.");
+// 🎟️ Redeem ticket
+window.redeemReward = async function () {
+  if (!contractReady) {
+    console.warn("⏳ Contract not ready yet");
+    document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract.";
+    return;
   }
-}
 
-async function redeemReward() {
   try {
-    debugger
     const userAddress = await signer.getAddress();
-    const actionId = ethers.utils.formatBytes32String("action1");
+    const actionId = ethers.encodeBytes32String("action1");
 
-    // 🧠 Create the same message hash that your smart contract will verify
-    const messageHash = ethers.utils.solidityKeccak256(
+    const messageHash = ethers.solidityPackedKeccak256(
       ["bytes32", "address"],
       [actionId, userAddress]
     );
 
-    // ✍️ Simulated signing by merchant (deployer's private key)
-    const merchantPrivateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-    const merchantWallet = new ethers.Wallet(merchantPrivateKey);
-    const signature = await merchantWallet.signMessage(ethers.utils.arrayify(messageHash));
+    const merchantWallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
+    const signature = await merchantWallet.signMessage(ethers.getBytes(messageHash));
 
-    // 📤 Send the redeem transaction from the logged-in user
     const tx = await contract.redeemTicket(actionId, signature);
     await tx.wait();
 
     document.getElementById("message").innerText = "🎉 Reward redeemed!";
+    console.log("✅ Tx Hash:", tx.hash);
   } catch (err) {
     console.error("❌ Redeem failed:", err);
     document.getElementById("message").innerText = "❌ Error: " + err.message;
   }
-}
+};
