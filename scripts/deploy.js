@@ -16,10 +16,24 @@ async function main() {
     console.log("Account balance:", ethers.formatEther(balance), "ETH");
     
     // Deploy contract
-    const LoyaltyRewardsToken = await ethers.getContractFactory("LoyaltyRewardsToken");
+    //const LoyaltyRewardsToken = await ethers.getContractFactory("LoyaltyRewardsToken");
+
+    const LoyaltyRewardsToken = await ethers.getContractFactory("LoyaltyRewardsToken", {
+        libraries: {}, // keep this if needed later
+    });
+
     console.log("\nDeploying LoyaltyRewardsToken...");
     
-    const contract = await upgrades.deployProxy(LoyaltyRewardsToken, [deployer.address]);
+    //const contract = await upgrades.deployProxy(LoyaltyRewardsToken, [deployer.address]);
+
+    const contract = await upgrades.deployProxy(
+        LoyaltyRewardsToken,
+        [deployer.address, deployer.address],
+        {
+          initializer: "initialize",
+          unsafeAllow: ["constructor"],
+        }
+      );
     await contract.waitForDeployment();
     
     const contractAddress = await contract.getAddress();
