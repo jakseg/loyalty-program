@@ -6,7 +6,7 @@ let contractAddress = null;
 let contractReady = false;
 
 // Fallback Contract Address (ändere das nach jedem Deployment)
-const FALLBACK_CONTRACT_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+const FALLBACK_CONTRACT_ADDRESS = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";
 
 // 🔁 Try to initialize contract when conditions are ready
 function initializeContractIfReady() {
@@ -71,9 +71,8 @@ window.connectWallet = async function () {
     }
 };
 
-// 🎟️ Redeem ticket
-// 🎟️ Redeem ticket
-window.redeemReward = async function () {
+// 🎟️ Redeem ticket mit ticketTier Parameter
+window.redeemReward = async function (ticketTier = "basic") {
     if (!contractReady) {
         console.warn("⏳ Contract not ready yet");
         document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract initialization.";
@@ -81,19 +80,20 @@ window.redeemReward = async function () {
     }
     
     try {
-        document.getElementById("message").innerText = "🔄 Processing reward...";
+        document.getElementById("message").innerText = `🔄 Processing ${ticketTier} reward...`;
         
         const userAddress = await signer.getAddress();
         
-        // ✅ LÖSUNG: Erstelle eine einzigartige actionId mit Hash
+        // ✅ Erstelle eine einzigartige actionId mit ticketTier
         const timestamp = Date.now();
         const randomId = Math.floor(Math.random() * 10000);
-        const uniqueActionString = `reward-${userAddress.slice(-6)}-${timestamp}-${randomId}`;
+        const uniqueActionString = `${ticketTier}-reward-${userAddress.slice(-6)}-${timestamp}-${randomId}`;
         
         // ✅ Verwende keccak256 Hash statt encodeBytes32String für lange Strings
         const actionId = ethers.keccak256(ethers.toUtf8Bytes(uniqueActionString));
         
         console.log("🎫 Creating unique ticket:", uniqueActionString);
+        console.log("🎫 Ticket Tier:", ticketTier);
         console.log("🎫 Action ID (hash):", actionId);
         
         const messageHash = ethers.solidityPackedKeccak256(
@@ -106,7 +106,8 @@ window.redeemReward = async function () {
         
         // Transaction senden
         console.log("📤 Sending transaction...");
-        const tx = await contract.redeemTicket(actionId, signature);
+        // In deiner redeemReward Funktion:
+        const tx = await contract["redeemTicket(bytes32,bytes,string)"](actionId, signature, ticketTier);
         
         document.getElementById("message").innerText = "⏳ Transaction sent, waiting for confirmation...";
         const receipt = await tx.wait();
@@ -135,25 +136,31 @@ window.redeemReward = async function () {
             console.warn("⚠️ Could not extract token ID from events");
         }
         
+        // Emoji für Ticket Tier
+        const tierEmoji = ticketTier === "premium" ? "💎" : "🎫";
+        const tierName = ticketTier === "premium" ? "Premium" : "Basic";
+        
         // Erfolgreiche Nachricht mit allen Details anzeigen
         document.getElementById("message").innerHTML = `
-            🎉 <strong>Reward redeemed successfully!</strong><br><br>
+            🎉 <strong>${tierEmoji} ${tierName} Reward redeemed successfully!</strong><br><br>
             <strong>📋 Contract Address:</strong><br>
             <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${currentContractAddress}</code><br><br>
             <strong>🏷️ Token ID:</strong> <span style="font-size: 18px; color: #007bff;">${tokenId}</span><br><br>
+            <strong>${tierEmoji} Tier:</strong> <span style="font-size: 16px; color: ${ticketTier === "premium" ? "#ffd700" : "#666"};">${tierName}</span><br><br>
             <strong>👤 Owner:</strong><br>
             <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${userAddress}</code><br><br>
             <strong>🎫 Ticket ID:</strong><br>
             <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 11px;">${uniqueActionString}</code><br><br>
             <strong>📄 Transaction:</strong><br>
             <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${tx.hash}</code><br><br>
-            <em>📱 Copy the Contract Address and Token ID to import your NFT in MetaMask</em>
+            <em>📱 Copy the Contract Address and Token ID to import your ${tierName} NFT in MetaMask</em>
         `;
         
         console.log("✅ Transaction successful!");
         console.log("✅ Tx Hash:", tx.hash);
         console.log("✅ Contract Address:", currentContractAddress);
         console.log("✅ Token ID:", tokenId);
+        console.log("✅ Ticket Tier:", ticketTier);
         console.log("✅ Unique Ticket:", uniqueActionString);
         console.log("✅ Action ID Hash:", actionId);
         console.log("✅ NFT Owner:", userAddress);
@@ -176,4 +183,14 @@ window.redeemReward = async function () {
         
         document.getElementById("message").innerText = errorMessage;
     }
+};
+
+// 🎫 Basic Reward Button Function
+window.redeemBasicReward = function() {
+    redeemReward("basic");
+};
+
+// 💎 Premium Reward Button Function  
+window.redeemPremiumReward = function() {
+    redeemReward("premium");
 };

@@ -1,5 +1,5 @@
 {
-  "contractAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  "contractAddress": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
   "network": "localhost",
   "chainId": 31337,
   "merchantSigner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -8,5 +8,5 @@
     "function redeemTicket(bytes32 actionId, bytes memory signature) external returns (uint256)",
     "function isTicketUsed(bytes32 actionId, address user) external view returns (bool)"
   ],
-  "timestamp": "2025-06-28T13:22:57.179Z"
+  "timestamp": "2025-06-28T14:35:42.560Z"
 }
