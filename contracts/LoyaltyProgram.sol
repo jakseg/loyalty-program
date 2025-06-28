@@ -67,6 +67,19 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
        return redeemTicket(actionId, signature, "basic");
    }
 
+   // Block all transfers after minting
+   function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
+       address from = _ownerOf(tokenId);
+       
+       // Allow minting (from == address(0))
+       if (from == address(0)) {
+           return super._update(to, tokenId, auth);
+       }
+       
+       // Block all transfers
+       revert("NFTs are non-transferable");
+   }
+
    // ✅ NEW: Function to get the tier of a specific token
    function getTokenTier(uint256 tokenId) public view returns (string memory) {
        require(_ownerOf(tokenId) != address(0), "Token does not exist");
