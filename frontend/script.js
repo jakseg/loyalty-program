@@ -5,9 +5,6 @@ let contractAbi = [];
 let contractAddress = null;
 let contractReady = false;
 
-// Fallback Contract Address (ändere das nach jedem Deployment)
-const FALLBACK_CONTRACT_ADDRESS = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";
-
 // 🔁 Try to initialize contract when conditions are ready
 function initializeContractIfReady() {
     if (signer && contractAbi.length > 0 && contractAddress && !contractReady) {
@@ -15,7 +12,18 @@ function initializeContractIfReady() {
         contractReady = true;
         console.log("✅ Contract initialized");
         console.log("✅ Contract Address:", contractAddress);
-        console.log("🧠 Contract functions:", Object.keys(contract.functions));
+        
+        // Safely check contract functions - some properties might not be available immediately
+        try {
+            if (contract.interface && contract.interface.functions) {
+                const functionNames = Object.keys(contract.interface.functions);
+                console.log("🧠 Contract functions:", functionNames);
+            } else {
+                console.log("🧠 Contract interface loading...");
+            }
+        } catch (error) {
+            console.log("🧠 Contract functions will be available after connection");
+        }
     }
 }
 
@@ -28,18 +36,11 @@ async function loadContractData() {
         contractAbi = abiData.abi || abiData;
         console.log("✅ ABI loaded:", contractAbi.length, "functions");
         
-        // Try to load contract address from deployment-info.json
-        try {
-            const deploymentResponse = await fetch("deployment-info.json");
-            const deploymentData = await deploymentResponse.json();
-            contractAddress = deploymentData.contractAddress;
-            console.log("✅ Contract address loaded from deployment-info:", contractAddress);
-        } catch (deploymentError) {
-            // Fallback to hardcoded address if deployment-info.json doesn't exist
-            console.warn("⚠️ deployment-info.json not found, using fallback address");
-            contractAddress = FALLBACK_CONTRACT_ADDRESS;
-            console.log("✅ Using fallback contract address:", contractAddress);
-        }
+        // Load contract address from deployment-info.json
+        const deploymentResponse = await fetch("../deployment-info.json");
+        const deploymentData = await deploymentResponse.json();
+        contractAddress = deploymentData.contractAddress;
+        console.log("✅ Contract address loaded from deployment-info:", contractAddress);
         
         initializeContractIfReady();
         
