@@ -1,36 +1,12 @@
 {
-  "contractAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-  "network": "hardhat",
-  "chainId": 31337, /* minting nfts for these pre-defined users for the sake of tesing TODO: remove this later */
-  "tokens": [
-    {
-      "tokenId": 0,
-      "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "name": "Deployer",
-      "ticket": "deployer-purchase-1",
-      "txHash": "0xf4cd606b22fc08e4499a5dca7113a7336e5eb6b82e182dd7b4dfd9e0191e54b2"
-    },
-    {
-      "tokenId": 1,
-      "owner": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-      "name": "User1",
-      "ticket": "user1-shopping-reward",
-      "txHash": "0x136844242e95fa613d4a1b1115a09f4b34e230ed8af0b0997a8b96ee00f0de1a"
-    },
-    {
-      "tokenId": 2,
-      "owner": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-      "name": "User2",
-      "ticket": "user2-event-attendance",
-      "txHash": "0xdf132047b0980c8e5f90916a9ea80e8c6c7d686e5954c8bcb05b74c65ed520c6"
-    },
-    {
-      "tokenId": 3,
-      "owner": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
-      "name": "User3",
-      "ticket": "user3-referral-bonus",
-      "txHash": "0x5491313ec609ef30fb96c977472897dc410339562d006300de9512692f0eb702"
-    }
+  "contractAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  "network": "localhost",
+  "chainId": 31337,
+  "merchantSigner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "merchantPrivateKey": "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+  "abi": [
+    "function redeemTicket(bytes32 actionId, bytes memory signature) external returns (uint256)",
+    "function isTicketUsed(bytes32 actionId, address user) external view returns (bool)"
   ],
-  "timestamp": "2025-06-25T13:56:57.391Z"
+  "timestamp": "2025-06-28T13:22:57.179Z"
 }

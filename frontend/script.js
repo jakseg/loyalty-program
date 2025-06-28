@@ -2,76 +2,178 @@ import { ethers } from "https://esm.sh/ethers@6.7.0";
 
 let provider, signer, contract;
 let contractAbi = [];
+let contractAddress = null;
 let contractReady = false;
 
-const contractAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+// Fallback Contract Address (ändere das nach jedem Deployment)
+const FALLBACK_CONTRACT_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
 
 // 🔁 Try to initialize contract when conditions are ready
 function initializeContractIfReady() {
-  debugger
-  if (signer && contractAbi.length > 0 && !contractReady) {
-    contract = new ethers.Contract(contractAddress, contractAbi, signer);
-    contractReady = true;
-    console.log("✅ Contract initialized");
-    console.log("🧠 Contract functions:", Object.keys(contract.functions));
-  }
+    if (signer && contractAbi.length > 0 && contractAddress && !contractReady) {
+        contract = new ethers.Contract(contractAddress, contractAbi, signer);
+        contractReady = true;
+        console.log("✅ Contract initialized");
+        console.log("✅ Contract Address:", contractAddress);
+        console.log("🧠 Contract functions:", Object.keys(contract.functions));
+    }
 }
 
-// 🔄 Load ABI
-fetch("abi.json")
-  .then(res => res.json())
-  .then(data => {
-    contractAbi = data.abi;  // ✅ Fix: extract the array
-    console.log("✅ ABI loaded:", contractAbi.length, "functions");
-    initializeContractIfReady();
-  })
-  .catch(err => {
-    console.error("❌ Failed to load ABI:", err);
-    document.getElementById("message").innerText = "❌ Failed to load ABI.";
-  });
+// 🔄 Load ABI first, then try to load contract address
+async function loadContractData() {
+    try {
+        // Load ABI
+        const abiResponse = await fetch("abi.json");
+        const abiData = await abiResponse.json();
+        contractAbi = abiData.abi || abiData;
+        console.log("✅ ABI loaded:", contractAbi.length, "functions");
+        
+        // Try to load contract address from deployment-info.json
+        try {
+            const deploymentResponse = await fetch("deployment-info.json");
+            const deploymentData = await deploymentResponse.json();
+            contractAddress = deploymentData.contractAddress;
+            console.log("✅ Contract address loaded from deployment-info:", contractAddress);
+        } catch (deploymentError) {
+            // Fallback to hardcoded address if deployment-info.json doesn't exist
+            console.warn("⚠️ deployment-info.json not found, using fallback address");
+            contractAddress = FALLBACK_CONTRACT_ADDRESS;
+            console.log("✅ Using fallback contract address:", contractAddress);
+        }
+        
+        initializeContractIfReady();
+        
+    } catch (error) {
+        console.error("❌ Failed to load contract data:", error);
+        document.getElementById("message").innerText = "❌ Failed to load contract data: " + error.message;
+    }
+}
+
+// Load contract data when script starts
+loadContractData();
 
 // 🔌 Connect wallet
 window.connectWallet = async function () {
-  if (!window.ethereum) {
-    alert("MetaMask is not installed.");
-    return;
-  }
-
-  provider = new ethers.BrowserProvider(window.ethereum);
-  signer = await provider.getSigner();
-  const address = await signer.getAddress();
-
-  document.getElementById("message").innerText = "🔗 Connected: " + address;
-  initializeContractIfReady();
+    if (!window.ethereum) {
+        alert("MetaMask is not installed.");
+        return;
+    }
+    
+    try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        document.getElementById("message").innerText = "🔗 Connected: " + address;
+        initializeContractIfReady();
+    } catch (error) {
+        console.error("❌ Wallet connection failed:", error);
+        document.getElementById("message").innerText = "❌ Failed to connect wallet: " + error.message;
+    }
 };
 
 // 🎟️ Redeem ticket
+// 🎟️ Redeem ticket
 window.redeemReward = async function () {
-  if (!contractReady) {
-    console.warn("⏳ Contract not ready yet");
-    document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract.";
-    return;
-  }
-
-  try {
-    const userAddress = await signer.getAddress();
-    const actionId = ethers.encodeBytes32String("action1");
-
-    const messageHash = ethers.solidityPackedKeccak256(
-      ["bytes32", "address"],
-      [actionId, userAddress]
-    );
-
-    const merchantWallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
-    const signature = await merchantWallet.signMessage(ethers.getBytes(messageHash));
-
-    const tx = await contract.redeemTicket(actionId, signature);
-    await tx.wait();
-
-    document.getElementById("message").innerText = "🎉 Reward redeemed!";
-    console.log("✅ Tx Hash:", tx.hash);
-  } catch (err) {
-    console.error("❌ Redeem failed:", err);
-    document.getElementById("message").innerText = "❌ Error: " + err.message;
-  }
+    if (!contractReady) {
+        console.warn("⏳ Contract not ready yet");
+        document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract initialization.";
+        return;
+    }
+    
+    try {
+        document.getElementById("message").innerText = "🔄 Processing reward...";
+        
+        const userAddress = await signer.getAddress();
+        
+        // ✅ LÖSUNG: Erstelle eine einzigartige actionId mit Hash
+        const timestamp = Date.now();
+        const randomId = Math.floor(Math.random() * 10000);
+        const uniqueActionString = `reward-${userAddress.slice(-6)}-${timestamp}-${randomId}`;
+        
+        // ✅ Verwende keccak256 Hash statt encodeBytes32String für lange Strings
+        const actionId = ethers.keccak256(ethers.toUtf8Bytes(uniqueActionString));
+        
+        console.log("🎫 Creating unique ticket:", uniqueActionString);
+        console.log("🎫 Action ID (hash):", actionId);
+        
+        const messageHash = ethers.solidityPackedKeccak256(
+            ["bytes32", "address"],
+            [actionId, userAddress]
+        );
+        
+        const merchantWallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
+        const signature = await merchantWallet.signMessage(ethers.getBytes(messageHash));
+        
+        // Transaction senden
+        console.log("📤 Sending transaction...");
+        const tx = await contract.redeemTicket(actionId, signature);
+        
+        document.getElementById("message").innerText = "⏳ Transaction sent, waiting for confirmation...";
+        const receipt = await tx.wait();
+        
+        // Contract Address holen
+        const currentContractAddress = await contract.getAddress();
+        
+        // Token ID aus dem Event extrahieren
+        let tokenId = "Unknown";
+        try {
+            // Suche nach dem TicketRedeemed Event
+            for (const log of receipt.logs) {
+                try {
+                    const parsedLog = contract.interface.parseLog(log);
+                    if (parsedLog.name === "TicketRedeemed") {
+                        tokenId = parsedLog.args.tokenId.toString();
+                        console.log("✅ Token ID from event:", tokenId);
+                        break;
+                    }
+                } catch (e) {
+                    // Ignore logs that can't be parsed
+                    continue;
+                }
+            }
+        } catch (eventError) {
+            console.warn("⚠️ Could not extract token ID from events");
+        }
+        
+        // Erfolgreiche Nachricht mit allen Details anzeigen
+        document.getElementById("message").innerHTML = `
+            🎉 <strong>Reward redeemed successfully!</strong><br><br>
+            <strong>📋 Contract Address:</strong><br>
+            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${currentContractAddress}</code><br><br>
+            <strong>🏷️ Token ID:</strong> <span style="font-size: 18px; color: #007bff;">${tokenId}</span><br><br>
+            <strong>👤 Owner:</strong><br>
+            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${userAddress}</code><br><br>
+            <strong>🎫 Ticket ID:</strong><br>
+            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 11px;">${uniqueActionString}</code><br><br>
+            <strong>📄 Transaction:</strong><br>
+            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${tx.hash}</code><br><br>
+            <em>📱 Copy the Contract Address and Token ID to import your NFT in MetaMask</em>
+        `;
+        
+        console.log("✅ Transaction successful!");
+        console.log("✅ Tx Hash:", tx.hash);
+        console.log("✅ Contract Address:", currentContractAddress);
+        console.log("✅ Token ID:", tokenId);
+        console.log("✅ Unique Ticket:", uniqueActionString);
+        console.log("✅ Action ID Hash:", actionId);
+        console.log("✅ NFT Owner:", userAddress);
+        
+    } catch (err) {
+        console.error("❌ Redeem failed:", err);
+        
+        let errorMessage = "❌ Error: ";
+        if (err.code === "ACTION_REJECTED") {
+            errorMessage += "Transaction was rejected by user.";
+        } else if (err.message.includes("Ticket already used")) {
+            errorMessage += "This ticket has already been used.";
+        } else if (err.message.includes("Invalid signature")) {
+            errorMessage += "Invalid signature. Please try again.";
+        } else if (err.message.includes("bytes32 string")) {
+            errorMessage += "Ticket ID too long. Please try again.";
+        } else {
+            errorMessage += err.message;
+        }
+        
+        document.getElementById("message").innerText = errorMessage;
+    }
 };
