@@ -1,5 +1,5 @@
 {
-  "contractAddress": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+  "contractAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
   "network": "hardhat",
   "chainId": 31337,
   "tokens": [
@@ -8,29 +8,29 @@
       "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
       "name": "Deployer",
       "ticket": "deployer-purchase-1",
-      "txHash": "0x6919d8bb1cfa6b20b21cef39fffdf2f2a848ceed9b726a363555b91417ee8f34"
+      "txHash": "0xf4cd606b22fc08e4499a5dca7113a7336e5eb6b82e182dd7b4dfd9e0191e54b2"
     },
     {
       "tokenId": 1,
       "owner": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
       "name": "User1",
       "ticket": "user1-shopping-reward",
-      "txHash": "0xf41b56180851eaa225441ebaa2ceaf495bd7f4eeb81752b4698c3cd8a0ee3865"
+      "txHash": "0x136844242e95fa613d4a1b1115a09f4b34e230ed8af0b0997a8b96ee00f0de1a"
     },
     {
       "tokenId": 2,
       "owner": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
       "name": "User2",
       "ticket": "user2-event-attendance",
-      "txHash": "0x53e736915c4852c5859608f1a31bd03c99912cbb91c76a05a03b5a3e95f0f748"
+      "txHash": "0xdf132047b0980c8e5f90916a9ea80e8c6c7d686e5954c8bcb05b74c65ed520c6"
     },
     {
       "tokenId": 3,
       "owner": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
       "name": "User3",
       "ticket": "user3-referral-bonus",
-      "txHash": "0x2e6a9c0b64d7a9ba535f65a0ccf1798882c1aa0cd9cba11d9727779e14f39eee"
+      "txHash": "0x5491313ec609ef30fb96c977472897dc410339562d006300de9512692f0eb702"
     }
   ],
-  "timestamp": "2025-06-23T20:28:05.347Z"
+  "timestamp": "2025-06-25T13:56:57.391Z"
 }
