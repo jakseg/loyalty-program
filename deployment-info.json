@@ -1,7 +1,7 @@
 {
   "contractAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
   "network": "hardhat",
-  "chainId": 31337,
+  "chainId": 31337, /* minting nfts for these pre-defined users for the sake of tesing TODO: remove this later */
   "tokens": [
     {
       "tokenId": 0,
