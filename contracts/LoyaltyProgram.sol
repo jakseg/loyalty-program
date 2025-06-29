@@ -141,26 +141,36 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
    }
 
    // ✅ NEW: Enhanced tokenURI with tier-based metadata
-   function tokenURI(uint256 tokenId)
-       public
-       view
-       override
-       returns (string memory)
-   {
-       require(_ownerOf(tokenId) != address(0), "Token does not exist");
-       
-       // Get the tier of this token
-       string memory tier = _tokenTiers[tokenId];
-       
-       // Example: Different base URIs for different tiers
-       if (keccak256(abi.encodePacked(tier)) == keccak256(abi.encodePacked("premium"))) {
-           // Premium tokens could have a different URI
-           return string(abi.encodePacked("https://your-api.com/premium/", toString(tokenId)));
-       } else {
-           // Basic tokens
-           return string(abi.encodePacked("https://your-api.com/basic/", toString(tokenId)));
-       }
-   }
+function tokenURI(uint256 tokenId)
+    public
+    view
+    override
+    returns (string memory)
+{
+    require(_ownerOf(tokenId) != address(0), "Token does not exist");
+
+    string memory tier = _tokenTiers[tokenId];
+
+    // Choose image URL source based on tier
+    if (keccak256(abi.encodePacked(tier)) == keccak256(abi.encodePacked("premium"))) {
+        return string(
+            abi.encodePacked(
+                "https://picsum.photos/seed/premium",
+                toString(tokenId),
+                "/600/600"
+            )
+        );
+    } else {
+        return string(
+            abi.encodePacked(
+                "https://picsum.photos/seed/basic",
+                toString(tokenId),
+                "/600/600"
+            )
+        );
+    }
+}
+
 
    // ✅ NEW: Helper function to convert uint to string
    function toString(uint256 value) internal pure returns (string memory) {

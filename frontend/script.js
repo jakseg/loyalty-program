@@ -74,116 +74,98 @@ window.connectWallet = async function () {
 
 // 🎟️ Redeem ticket mit ticketTier Parameter
 window.redeemReward = async function (ticketTier = "basic") {
-    if (!contractReady) {
-        console.warn("⏳ Contract not ready yet");
-        document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract initialization.";
-        return;
-    }
-    
-    try {
-        document.getElementById("message").innerText = `🔄 Processing ${ticketTier} reward...`;
-        
-        const userAddress = await signer.getAddress();
-        
-        // ✅ Erstelle eine einzigartige actionId mit ticketTier
-        const timestamp = Date.now();
-        const randomId = Math.floor(Math.random() * 10000);
-        const uniqueActionString = `${ticketTier}-reward-${userAddress.slice(-6)}-${timestamp}-${randomId}`;
-        
-        // ✅ Verwende keccak256 Hash statt encodeBytes32String für lange Strings
-        const actionId = ethers.keccak256(ethers.toUtf8Bytes(uniqueActionString));
-        
-        console.log("🎫 Creating unique ticket:", uniqueActionString);
-        console.log("🎫 Ticket Tier:", ticketTier);
-        console.log("🎫 Action ID (hash):", actionId);
-        
-        const messageHash = ethers.solidityPackedKeccak256(
-            ["bytes32", "address"],
-            [actionId, userAddress]
-        );
-        
-        const merchantWallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
-        const signature = await merchantWallet.signMessage(ethers.getBytes(messageHash));
-        
-        // Transaction senden
-        console.log("📤 Sending transaction...");
-        // In deiner redeemReward Funktion:
-        const tx = await contract["redeemTicket(bytes32,bytes,string)"](actionId, signature, ticketTier);
-        
-        document.getElementById("message").innerText = "⏳ Transaction sent, waiting for confirmation...";
-        const receipt = await tx.wait();
-        
-        // Contract Address holen
-        const currentContractAddress = await contract.getAddress();
-        
-        // Token ID aus dem Event extrahieren
-        let tokenId = "Unknown";
-        try {
-            // Suche nach dem TicketRedeemed Event
-            for (const log of receipt.logs) {
-                try {
-                    const parsedLog = contract.interface.parseLog(log);
-                    if (parsedLog.name === "TicketRedeemed") {
-                        tokenId = parsedLog.args.tokenId.toString();
-                        console.log("✅ Token ID from event:", tokenId);
-                        break;
-                    }
-                } catch (e) {
-                    // Ignore logs that can't be parsed
-                    continue;
-                }
-            }
-        } catch (eventError) {
-            console.warn("⚠️ Could not extract token ID from events");
-        }
-        
-        // Emoji für Ticket Tier
-        const tierEmoji = ticketTier === "premium" ? "💎" : "🎫";
-        const tierName = ticketTier === "premium" ? "Premium" : "Basic";
-        
-        // Erfolgreiche Nachricht mit allen Details anzeigen
-        document.getElementById("message").innerHTML = `
-            🎉 <strong>${tierEmoji} ${tierName} Reward redeemed successfully!</strong><br><br>
-            <strong>📋 Contract Address:</strong><br>
-            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${currentContractAddress}</code><br><br>
-            <strong>🏷️ Token ID:</strong> <span style="font-size: 18px; color: #007bff;">${tokenId}</span><br><br>
-            <strong>${tierEmoji} Tier:</strong> <span style="font-size: 16px; color: ${ticketTier === "premium" ? "#ffd700" : "#666"};">${tierName}</span><br><br>
-            <strong>👤 Owner:</strong><br>
-            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${userAddress}</code><br><br>
-            <strong>🎫 Ticket ID:</strong><br>
-            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 11px;">${uniqueActionString}</code><br><br>
-            <strong>📄 Transaction:</strong><br>
-            <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${tx.hash}</code><br><br>
-            <em>📱 Copy the Contract Address and Token ID to import your ${tierName} NFT in MetaMask</em>
-        `;
-        
-        console.log("✅ Transaction successful!");
-        console.log("✅ Tx Hash:", tx.hash);
-        console.log("✅ Contract Address:", currentContractAddress);
-        console.log("✅ Token ID:", tokenId);
-        console.log("✅ Ticket Tier:", ticketTier);
-        console.log("✅ Unique Ticket:", uniqueActionString);
-        console.log("✅ Action ID Hash:", actionId);
-        console.log("✅ NFT Owner:", userAddress);
-        
-    } catch (err) {
-        console.error("❌ Redeem failed:", err);
-        
-        let errorMessage = "❌ Error: ";
-        if (err.code === "ACTION_REJECTED") {
-            errorMessage += "Transaction was rejected by user.";
-        } else if (err.message.includes("Ticket already used")) {
-            errorMessage += "This ticket has already been used.";
-        } else if (err.message.includes("Invalid signature")) {
-            errorMessage += "Invalid signature. Please try again.";
-        } else if (err.message.includes("bytes32 string")) {
-            errorMessage += "Ticket ID too long. Please try again.";
-        } else {
-            errorMessage += err.message;
-        }
-        
-        document.getElementById("message").innerText = errorMessage;
-    }
+  if (!contractReady) {
+      console.warn("⏳ Contract not ready yet");
+      document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract initialization.";
+      return;
+  }
+
+  try {
+      document.getElementById("message").innerText = `🔄 Processing ${ticketTier} reward...`;
+
+      const userAddress = await signer.getAddress();
+      const timestamp = Date.now();
+      const randomId = Math.floor(Math.random() * 10000);
+      const uniqueActionString = `${ticketTier}-reward-${userAddress.slice(-6)}-${timestamp}-${randomId}`;
+      const actionId = ethers.keccak256(ethers.toUtf8Bytes(uniqueActionString));
+
+      const messageHash = ethers.solidityPackedKeccak256(
+          ["bytes32", "address"],
+          [actionId, userAddress]
+      );
+
+      const merchantWallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
+      const signature = await merchantWallet.signMessage(ethers.getBytes(messageHash));
+
+      const tx = await contract["redeemTicket(bytes32,bytes,string)"](actionId, signature, ticketTier);
+      document.getElementById("message").innerText = "⏳ Transaction sent, waiting for confirmation...";
+      const receipt = await tx.wait();
+      const currentContractAddress = await contract.getAddress();
+
+      let tokenId = "Unknown";
+      for (const log of receipt.logs) {
+          try {
+              const parsedLog = contract.interface.parseLog(log);
+              if (parsedLog.name === "TicketRedeemed") {
+                  tokenId = parsedLog.args.tokenId.toString();
+                  break;
+              }
+          } catch { continue; }
+      }
+
+      const tierEmoji = ticketTier === "premium" ? "💎" : "🎫";
+      const tierName = ticketTier === "premium" ? "Premium" : "Basic";
+
+      // 🔥 Display success message
+      document.getElementById("message").innerHTML = `
+          🎉 <strong>${tierEmoji} ${tierName} Reward redeemed successfully!</strong><br><br>
+          <strong>📋 Contract Address:</strong><br>
+          <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${currentContractAddress}</code><br><br>
+          <strong>🏷️ Token ID:</strong> <span style="font-size: 18px; color: #007bff;">${tokenId}</span><br><br>
+          <strong>${tierEmoji} Tier:</strong> <span style="font-size: 16px; color: ${ticketTier === "premium" ? "#ffd700" : "#666"};">${tierName}</span><br><br>
+          <strong>👤 Owner:</strong><br>
+          <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${userAddress}</code><br><br>
+          <strong>🎫 Ticket ID:</strong><br>
+          <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 11px;">${uniqueActionString}</code><br><br>
+          <strong>📄 Transaction:</strong><br>
+          <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${tx.hash}</code><br><br>
+          <em>📱 Copy the Contract Address and Token ID to import your ${tierName} NFT in MetaMask</em>
+      `;
+
+      // 🖼️ Fetch and show image using tokenURI
+      try {
+          const tokenUri = await contract.tokenURI(tokenId);
+          console.log("🖼️ tokenURI:", tokenUri);
+          const img = document.createElement("img");
+          img.src = tokenUri;
+          img.alt = "NFT Image";
+          img.style.width = "300px";
+          img.style.height = "300px";
+          img.style.borderRadius = "12px";
+          img.style.marginTop = "10px";
+          document.getElementById("message").appendChild(img);
+      } catch (err) {
+          console.warn("⚠️ Could not load NFT image:", err);
+      }
+
+  } catch (err) {
+      console.error("❌ Redeem failed:", err);
+
+      let errorMessage = "❌ Error: ";
+      if (err.code === "ACTION_REJECTED") {
+          errorMessage += "Transaction was rejected by user.";
+      } else if (err.message.includes("Ticket already used")) {
+          errorMessage += "This ticket has already been used.";
+      } else if (err.message.includes("Invalid signature")) {
+          errorMessage += "Invalid signature. Please try again.";
+      } else if (err.message.includes("bytes32 string")) {
+          errorMessage += "Ticket ID too long. Please try again.";
+      } else {
+          errorMessage += err.message;
+      }
+
+      document.getElementById("message").innerText = errorMessage;
+  }
 };
 
 // 🎫 Basic Reward Button Function
