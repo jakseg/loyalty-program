@@ -41,4 +41,7 @@ npx hardhat node
 
 # Terminal 2: Deploy contracts
 npx hardhat run scripts/deploy.js --network localhost
+
+# Terminal 3: Run Website
+npx live-server .
 ```
