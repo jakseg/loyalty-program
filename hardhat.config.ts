@@ -45,10 +45,16 @@ const config: HardhatUserConfig = {
     */
   },
   
+
   gasReporter: {
     enabled: process.env.REPORT_GAS === "true",
-    currency: "USD"
+    currency: "USD",
+    gasPrice: 20, // Add explicit gas price
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY, // Optional for USD conversion
+    showMethodSig: true // Shows method signatures for clarity
   },
+
+
   
   // Für spätere Contract-Verification (erstmal auskommentiert)
   /*

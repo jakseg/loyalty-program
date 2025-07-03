@@ -5,55 +5,55 @@ let contractAbi = [];
 let contractAddress = null;
 let contractReady = false;
 
-// 🔁 Try to initialize contract when conditions are ready
+// Try to initialize contract when conditions are ready
 function initializeContractIfReady() {
     if (signer && contractAbi.length > 0 && contractAddress && !contractReady) {
         contract = new ethers.Contract(contractAddress, contractAbi, signer);
         contractReady = true;
-        console.log("✅ Contract initialized");
-        console.log("✅ Contract Address:", contractAddress);
+        console.log("Contract initialized");
+        console.log("Contract Address:", contractAddress);
         
         // Safely check contract functions - some properties might not be available immediately
         try {
             if (contract.interface && contract.interface.functions) {
                 const functionNames = Object.keys(contract.interface.functions);
-                console.log("🧠 Contract functions:", functionNames);
+                console.log("Contract functions:", functionNames);
             } else {
-                console.log("🧠 Contract interface loading...");
+                console.log("Contract interface loading...");
             }
         } catch (error) {
-            console.log("🧠 Contract functions will be available after connection");
+            console.log("Contract functions will be available after connection");
         }
     }
 }
 
-// 🔄 Load ABI first, then try to load contract address
+// Load ABI first, then try to load contract address
 async function loadContractData() {
     try {
         // Load ABI
         const abiResponse = await fetch("abi.json");
         const abiData = await abiResponse.json();
         contractAbi = abiData.abi || abiData;
-        console.log("✅ ABI loaded:", contractAbi.length, "functions");
+        console.log("ABI loaded:", contractAbi.length, "functions");
         
         // Load contract address from deployment-info.json
         const deploymentResponse = await fetch("../deployment-info.json");
         const deploymentData = await deploymentResponse.json();
         contractAddress = deploymentData.contractAddress;
-        console.log("✅ Contract address loaded from deployment-info:", contractAddress);
+        console.log("Contract address loaded from deployment-info:", contractAddress);
         
         initializeContractIfReady();
         
     } catch (error) {
-        console.error("❌ Failed to load contract data:", error);
-        document.getElementById("message").innerText = "❌ Failed to load contract data: " + error.message;
+        console.error("Failed to load contract data:", error);
+        document.getElementById("message").innerText = "Failed to load contract data: " + error.message;
     }
 }
 
 // Load contract data when script starts
 loadContractData();
 
-// 🔌 Connect wallet
+// Connect wallet
 window.connectWallet = async function () {
     if (!window.ethereum) {
         alert("MetaMask is not installed.");
@@ -64,24 +64,24 @@ window.connectWallet = async function () {
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         const address = await signer.getAddress();
-        document.getElementById("message").innerText = "🔗 Connected: " + address;
+        document.getElementById("message").innerText = "Connected: " + address;
         initializeContractIfReady();
     } catch (error) {
-        console.error("❌ Wallet connection failed:", error);
-        document.getElementById("message").innerText = "❌ Failed to connect wallet: " + error.message;
+        console.error("Wallet connection failed:", error);
+        document.getElementById("message").innerText = "Failed to connect wallet: " + error.message;
     }
 };
 
-// 🎟️ Redeem ticket mit ticketTier Parameter
+// Redeem ticket with ticketTier parameter
 window.redeemReward = async function (ticketTier = "basic") {
   if (!contractReady) {
-      console.warn("⏳ Contract not ready yet");
-      document.getElementById("message").innerText = "⏳ Please connect wallet and wait for contract initialization.";
+      console.warn("Contract not ready yet");
+      document.getElementById("message").innerText = "Please connect wallet and wait for contract initialization.";
       return;
   }
 
   try {
-      document.getElementById("message").innerText = `🔄 Processing ${ticketTier} reward...`;
+      document.getElementById("message").innerText = `Processing ${ticketTier} reward...`;
 
       const userAddress = await signer.getAddress();
       const timestamp = Date.now();
@@ -98,10 +98,10 @@ window.redeemReward = async function (ticketTier = "basic") {
       const signature = await merchantWallet.signMessage(ethers.getBytes(messageHash));
 
       const tx = await contract["redeemTicket(bytes32,bytes,string)"](actionId, signature, ticketTier);
-      document.getElementById("message").innerText = "⏳ Transaction sent, waiting for confirmation...";
+      document.getElementById("message").innerText = "Transaction sent, waiting for confirmation...";
       const receipt = await tx.wait();
       const currentContractAddress = await contract.getAddress();
-
+      
       let tokenId = "Unknown";
       for (const log of receipt.logs) {
           try {
@@ -113,29 +113,28 @@ window.redeemReward = async function (ticketTier = "basic") {
           } catch { continue; }
       }
 
-      const tierEmoji = ticketTier === "premium" ? "💎" : "🎫";
       const tierName = ticketTier === "premium" ? "Premium" : "Basic";
 
-      // 🔥 Display success message
+      // Display success message
       document.getElementById("message").innerHTML = `
-          🎉 <strong>${tierEmoji} ${tierName} Reward redeemed successfully!</strong><br><br>
-          <strong>📋 Contract Address:</strong><br>
+          <strong>${tierName} Reward redeemed successfully!</strong><br><br>
+          <strong>Contract Address:</strong><br>
           <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${currentContractAddress}</code><br><br>
-          <strong>🏷️ Token ID:</strong> <span style="font-size: 18px; color: #007bff;">${tokenId}</span><br><br>
-          <strong>${tierEmoji} Tier:</strong> <span style="font-size: 16px; color: ${ticketTier === "premium" ? "#ffd700" : "#666"};">${tierName}</span><br><br>
-          <strong>👤 Owner:</strong><br>
+          <strong>Token ID:</strong> <span style="font-size: 18px; color: #007bff;">${tokenId}</span><br><br>
+          <strong>Tier:</strong> <span style="font-size: 16px; color: ${ticketTier === "premium" ? "#ffd700" : "#666"};">${tierName}</span><br><br>
+          <strong>Owner:</strong><br>
           <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${userAddress}</code><br><br>
-          <strong>🎫 Ticket ID:</strong><br>
+          <strong>Ticket ID:</strong><br>
           <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 11px;">${uniqueActionString}</code><br><br>
-          <strong>📄 Transaction:</strong><br>
+          <strong>Transaction:</strong><br>
           <code style="background: #f0f0f0; padding: 4px; border-radius: 4px; font-size: 12px;">${tx.hash}</code><br><br>
-          <em>📱 Copy the Contract Address and Token ID to import your ${tierName} NFT in MetaMask</em>
+          <em>Copy the Contract Address and Token ID to import your ${tierName} NFT in MetaMask</em>
       `;
 
-      // 🖼️ Fetch and show image using tokenURI
+      // Fetch and show image using tokenURI
       try {
           const tokenUri = await contract.tokenURI(tokenId);
-          console.log("🖼️ tokenURI:", tokenUri);
+          console.log("tokenURI:", tokenUri);
           const img = document.createElement("img");
           img.src = tokenUri;
           img.alt = "NFT Image";
@@ -145,13 +144,13 @@ window.redeemReward = async function (ticketTier = "basic") {
           img.style.marginTop = "10px";
           document.getElementById("message").appendChild(img);
       } catch (err) {
-          console.warn("⚠️ Could not load NFT image:", err);
+          console.warn("Could not load NFT image:", err);
       }
 
   } catch (err) {
-      console.error("❌ Redeem failed:", err);
+      console.error("Redeem failed:", err);
 
-      let errorMessage = "❌ Error: ";
+      let errorMessage = "Error: ";
       if (err.code === "ACTION_REJECTED") {
           errorMessage += "Transaction was rejected by user.";
       } else if (err.message.includes("Ticket already used")) {
@@ -168,12 +167,12 @@ window.redeemReward = async function (ticketTier = "basic") {
   }
 };
 
-// 🎫 Basic Reward Button Function
+// Basic Reward Button Function
 window.redeemBasicReward = function() {
     redeemReward("basic");
 };
 
-// 💎 Premium Reward Button Function  
+// Premium Reward Button Function  
 window.redeemPremiumReward = function() {
     redeemReward("premium");
 };
