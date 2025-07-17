@@ -50,7 +50,7 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS === "true",
     currency: "EUR",
     gasPrice: 30, // Add explicit gas price
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY, // Optional for USD conversion
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     showMethodSig: true,
     showTimeSpent: true, 
     outputFile: "gas-report.txt",
