@@ -46,5 +46,5 @@ npx hardhat run scripts/deploy.js --network localhost
 npx live-server .
 
 # Terminal 4: Run Gas Assessment
-REPORT_GAS=true npx hardhat test test/gas-assessment.test.ts
+REPORT_GAS=true npx hardhat test test/gas-analysis.test.ts
 ```

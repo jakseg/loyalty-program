@@ -8,5 +8,5 @@
     "function redeemTicket(bytes32 actionId, bytes memory signature) external returns (uint256)",
     "function isTicketUsed(bytes32 actionId, address user) external view returns (bool)"
   ],
-  "timestamp": "2025-07-15T17:56:56.466Z"
+  "timestamp": "2025-07-22T15:26:51.083Z"
 }

@@ -13,7 +13,6 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
     mapping(bytes32 => bool) usedTickets;
     address public merchantSigner;
     
-    // ✅ NEW: Define rewardable actions (optional feature)
     struct RewardAction {
         string name;
         string description;
@@ -23,13 +22,10 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
     
     mapping(bytes32 => RewardAction) public rewardableActions;
     
-    // ✅ NEW: Track user redemptions per action (for exclusive rewards)
     mapping(bytes32 => mapping(address => bool)) public userActionRedeemed;
     
-    // ✅ Mapping to store token tiers
     mapping(uint256 => string) private _tokenTiers;
     
-    // ✅ Events
     event TicketRedeemed(address indexed user, bytes32 ticketHash, uint256 tokenId, string tier);
     event RewardActionAdded(bytes32 indexed actionId, string name, string tier);
     event RewardActionUpdated(bytes32 indexed actionId, bool isActive);
@@ -46,7 +42,8 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
     function setMerchantSigner(address _signer) external onlyOwner {
         merchantSigner = _signer;
     }
-
+    //aktuell wird zu viel gespeichert also mal diese version testen
+    //function setValidTier(string memory tier, bool isValid) external onlyOwner
     // ✅ Add rewardable actions (optional feature for managed rewards)
     function addRewardableAction(
         bytes32 actionId, 
@@ -64,14 +61,12 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         emit RewardActionAdded(actionId, name, tier);
     }
 
-    // ✅ Update action status
     function updateRewardActionStatus(bytes32 actionId, bool isActive) external onlyOwner {
         require(bytes(rewardableActions[actionId].name).length > 0, "Action does not exist");
         rewardableActions[actionId].isActive = isActive;
         emit RewardActionUpdated(actionId, isActive);
     }
 
-    // ✅ MAIN FUNCTION: Enhanced redeemTicket function with tier support (for your frontend)
     function redeemTicket(bytes32 actionId, bytes memory signature, string memory tier) public returns (uint256) {
         bytes32 messageHash = keccak256(abi.encodePacked(actionId, msg.sender));
         bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
@@ -80,7 +75,6 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         require(recovered == merchantSigner, "Invalid signature");
         require(!usedTickets[messageHash], "Ticket already used");
         
-        // ✅ Validate tier input
         require(
             keccak256(abi.encodePacked(tier)) == keccak256(abi.encodePacked("basic")) ||
             keccak256(abi.encodePacked(tier)) == keccak256(abi.encodePacked("premium")),
@@ -90,12 +84,10 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         usedTickets[messageHash] = true;
         uint256 tokenId = _nextTokenId++;
         
-        // ✅ Store tier for this token
         _tokenTiers[tokenId] = tier;
         
         _safeMint(msg.sender, tokenId);
         
-        // ✅ Emit event with tier information
         emit TicketRedeemed(msg.sender, messageHash, tokenId, tier);
         
         return tokenId;
@@ -117,18 +109,15 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         revert("NFTs are non-transferable");
     }
 
-    // ✅ View functions for actions
     function getRewardableAction(bytes32 actionId) public view returns (RewardAction memory) {
         return rewardableActions[actionId];
     }
 
-    // ✅ Function to get the tier of a specific token
     function getTokenTier(uint256 tokenId) public view returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         return _tokenTiers[tokenId];
     }
 
-    // ✅ Function to get all tokens of a user with their tiers
     function getUserTokensWithTiers(address user) public view returns (uint256[] memory tokenIds, string[] memory tiers) {
         uint256 balance = balanceOf(user);
         uint256[] memory userTokens = new uint256[](balance);
@@ -147,37 +136,16 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         return (userTokens, userTiers);
     }
 
-    // ✅ Statistics functions
     function getTotalSupply() public view returns (uint256) {
         return _nextTokenId;
     }
-
-    function getBasicTokenCount() public view returns (uint256) {
-        uint256 count = 0;
-        for (uint256 i = 0; i < _nextTokenId; i++) {
-            if (keccak256(abi.encodePacked(_tokenTiers[i])) == keccak256(abi.encodePacked("basic"))) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    function getPremiumTokenCount() public view returns (uint256) {
-        uint256 count = 0;
-        for (uint256 i = 0; i < _nextTokenId; i++) {
-            if (keccak256(abi.encodePacked(_tokenTiers[i])) == keccak256(abi.encodePacked("premium"))) {
-                count++;
-            }
-        }
-        return count;
-    }
+    
 
     function isTicketUsed(bytes32 actionId, address user) public view returns (bool) {
         bytes32 hash = keccak256(abi.encodePacked(actionId, user));
         return usedTickets[hash];
     }
 
-    // ✅ Enhanced tokenURI with tier-based metadata
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
 
@@ -203,7 +171,6 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         }
     }
 
-    // ✅ Helper function to convert uint to string
     function toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
             return "0";
