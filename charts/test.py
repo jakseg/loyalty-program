@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Simplified Cost Assessment Charts Generator
-Generates setup and transaction cost charts as PDF files
-"""
-
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import os
