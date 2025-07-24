@@ -19,8 +19,8 @@ async function main() {
     await contract.waitForDeployment();
     const contractAddress = await contract.getAddress();
     
-    console.log("✅ Contract deployed to:", contractAddress);
-    console.log("✅ Merchant signer set to:", deployer.address);
+    console.log("Contract deployed to:", contractAddress);
+    console.log("Merchant signer set to:", deployer.address);
     
     // Save deployment information for your website to use
     const deploymentInfo = {
@@ -39,17 +39,11 @@ async function main() {
     };
     
     fs.writeFileSync("deployment-info.json", JSON.stringify(deploymentInfo, null, 2));
-    console.log("✅ Deployment info saved to: deployment-info.json");
+    console.log("Deployment info saved to: deployment-info.json");
     
-    console.log("\n=== NEXT STEPS FOR PRODUCTION ===");
-    console.log("1. Use the contract address in your website frontend");
-    console.log("2. Store the merchant private key securely in your backend");
-    console.log("3. When users perform actions, create signed tickets in your backend");
-    console.log("4. Let users redeem tickets through your website interface");
-    console.log("5. Users will receive NFTs directly in their MetaMask wallets");
 }
 
 main().catch((error) => {
-    console.error("❌ Deployment error:", error);
+    console.error("Deployment error:", error);
     process.exit(1);
 });

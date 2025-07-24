@@ -3,8 +3,13 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
 
 // Lade environment variables
-require('dotenv').config();
+
 require('@openzeppelin/hardhat-upgrades');
+if (process.env.TRACE === "true") {
+  require("hardhat-tracer");
+}
+
+require('dotenv').config();
 
 
 const config: HardhatUserConfig = {
@@ -45,10 +50,24 @@ const config: HardhatUserConfig = {
     */
   },
   
+
   gasReporter: {
     enabled: process.env.REPORT_GAS === "true",
-    currency: "USD"
+    currency: "USD",
+    gasPrice: 30, // Add explicit gas price
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    showMethodSig: true,
+    showTimeSpent: true, 
+    outputFile: "gas-report.txt",
+    excludeContracts: ["Migrations"],
   },
+
+  tracer: {
+    enabled: true,
+    showAddresses: true,
+    tasks: ["test"], // Enable tracer for these tasks
+  },
+
   
   // Für spätere Contract-Verification (erstmal auskommentiert)
   /*

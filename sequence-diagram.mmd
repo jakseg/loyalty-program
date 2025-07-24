@@ -1,0 +1,74 @@
+sequenceDiagram
+    participant User
+    participant Frontend as Frontend<br/>(HTML/JS)
+    participant MetaMask
+    participant MerchantSigner as Merchant Signer<br/>(Off-chain)
+    participant SmartContract as LoyaltyRewardsToken<br/>(Smart Contract)
+    participant Blockchain as Ethereum<br/>Blockchain
+
+    Note over User, Blockchain: Application Initialization Phase
+    User->>Frontend: Opens DApp in browser
+    Frontend->>Frontend: Load contract ABI from abi.json
+    Frontend->>Frontend: Load contract address from deployment-info.json
+    Frontend->>User: Display UI with Connect Wallet button
+
+    Note over User, Blockchain: Wallet Connection Phase
+    User->>Frontend: Clicks "Connect MetaMask"
+    Frontend->>MetaMask: Request wallet connection
+    MetaMask->>User: Show connection prompt
+    User->>MetaMask: Approve connection
+    MetaMask->>Frontend: Return user address
+    Frontend->>Frontend: Initialize contract instance
+    Frontend->>User: Display "Connected: [address]"
+
+    Note over User, Blockchain: Reward Redemption Phase
+    User->>Frontend: Clicks "Redeem Basic/Premium Reward"
+    Frontend->>Frontend: Generate unique actionId<br/>(tier + address + timestamp + random)
+    Frontend->>Frontend: Create message hash<br/>keccak256(actionId, userAddress)
+    
+    Note over Frontend, MerchantSigner: Digital Signature Generation
+    Frontend->>MerchantSigner: Sign message hash with merchant private key
+    MerchantSigner->>Frontend: Return signature
+
+    Note over User, Blockchain: Smart Contract Interaction
+    Frontend->>SmartContract: Call redeemTicket(actionId, signature, tier)
+    
+    Note over SmartContract: Signature Verification
+    SmartContract->>SmartContract: Recover signer from signature
+    SmartContract->>SmartContract: Verify signer == merchantSigner
+    SmartContract->>SmartContract: Check if ticket not already used
+    SmartContract->>SmartContract: Validate tier ("basic" or "premium")
+    
+    alt Valid Signature & Unused Ticket
+        SmartContract->>SmartContract: Mark ticket as used
+        SmartContract->>SmartContract: Generate new tokenId
+        SmartContract->>SmartContract: Store token tier mapping
+        SmartContract->>SmartContract: Mint NFT to user address
+        SmartContract->>Blockchain: Emit TicketRedeemed event
+        SmartContract->>Frontend: Return transaction receipt
+        
+        Note over Frontend: Success Display
+        Frontend->>SmartContract: Query tokenURI(tokenId)
+        SmartContract->>Frontend: Return image URL (tier-based)
+        Frontend->>User: Display success message with:<br/>• Contract address<br/>• Token ID<br/>• Tier<br/>• Transaction hash<br/>• NFT image
+        
+    else Invalid Signature or Used Ticket
+        SmartContract->>Frontend: Revert with error message
+        Frontend->>User: Display error message
+    end
+
+    Note over User, Blockchain: Optional: View Token Information
+    opt User wants to view their tokens
+        Frontend->>SmartContract: Call getUserTokensWithTiers(userAddress)
+        SmartContract->>Frontend: Return array of tokenIds and tiers
+        Frontend->>User: Display user's NFT collection
+    end
+
+    Note over User, Blockchain: Contract Statistics
+    opt View statistics
+        Frontend->>SmartContract: Call getTotalSupply()
+        Frontend->>SmartContract: Call getBasicTokenCount()
+        Frontend->>SmartContract: Call getPremiumTokenCount()
+        SmartContract->>Frontend: Return statistics
+        Frontend->>User: Display reward statistics
+    end
