@@ -57,7 +57,7 @@ sequenceDiagram
         Frontend->>User: Display error message
     end
 
-    Note over User, Blockchain: 🔍 Optional: View Token Information
+    Note over User, Blockchain: Optional: View Token Information
     opt User wants to view their tokens
         Frontend->>SmartContract: Call getUserTokensWithTiers(userAddress)
         SmartContract->>Frontend: Return array of tokenIds and tiers
