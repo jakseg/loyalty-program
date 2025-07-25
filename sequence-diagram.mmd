@@ -66,9 +66,7 @@ sequenceDiagram
 
     Note over User, Blockchain: Contract Statistics
     opt View statistics
-        Frontend->>SmartContract: Call getTotalSupply()
-        Frontend->>SmartContract: Call getBasicTokenCount()
-        Frontend->>SmartContract: Call getPremiumTokenCount()
-        SmartContract->>Frontend: Return statistics
-        Frontend->>User: Display reward statistics
+    Frontend->>SmartContract: Call getTotalSupply()
+    SmartContract->>Frontend: Return total token count
+    Frontend->>User: Display total tokens minted
     end

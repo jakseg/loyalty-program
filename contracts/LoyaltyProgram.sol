@@ -27,8 +27,6 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
     mapping(uint256 => string) private _tokenTiers;
     
     event TicketRedeemed(address indexed user, bytes32 ticketHash, uint256 tokenId, string tier);
-    //event RewardActionAdded(bytes32 indexed actionId, string name, string tier);
-    //event RewardActionUpdated(bytes32 indexed actionId, bool isActive);
 
     function initialize(address initialOwner, address signer) public initializer {
         __ERC721_init("LoyaltyRewardsToken", "LRT");
@@ -42,31 +40,7 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
     function setMerchantSigner(address _signer) external onlyOwner {
         merchantSigner = _signer;
     }
-    //aktuell wird zu viel gespeichert also mal diese version testen
-    //function setValidTier(string memory tier, bool isValid) external onlyOwner
-    /*
-    function addRewardableAction(
-        bytes32 actionId, 
-        string memory name, 
-        string memory description, 
-        string memory tier
-    ) external onlyOwner {
-        require(
-            keccak256(abi.encodePacked(tier)) == keccak256(abi.encodePacked("basic")) ||
-            keccak256(abi.encodePacked(tier)) == keccak256(abi.encodePacked("premium")),
-            "Invalid tier: must be 'basic' or 'premium'"
-        );
-        
-        rewardableActions[actionId] = RewardAction(name, description, true, tier);
-        emit RewardActionAdded(actionId, name, tier);
-    }
-    
-    function updateRewardActionStatus(bytes32 actionId, bool isActive) external onlyOwner {
-        require(bytes(rewardableActions[actionId].name).length > 0, "Action does not exist");
-        rewardableActions[actionId].isActive = isActive;
-        emit RewardActionUpdated(actionId, isActive);
-    }
-*/
+
     function redeemTicket(bytes32 actionId, bytes memory signature, string memory tier) public returns (uint256) {
         bytes32 messageHash = keccak256(abi.encodePacked(actionId, msg.sender));
         bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
@@ -100,7 +74,6 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
     function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
         address from = _ownerOf(tokenId);
         
-        // Allow minting (from == address(0))
         if (from == address(0)) {
             return super._update(to, tokenId, auth);
         }
@@ -195,21 +168,4 @@ contract LoyaltyRewardsToken is Initializable, ERC721Upgradeable, OwnableUpgrade
         _disableInitializers();
     }
 
-    // You could add these helper functions to your contract for testing:
-/*
-function testSignatureOnly(bytes32 actionId, address user, bytes memory signature) 
-    public view returns (bool) {
-    bytes32 messageHash = keccak256(abi.encodePacked(actionId, user));
-    bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
-    address recovered = ECDSA.recover(ethSignedHash, signature);
-    return recovered == merchantSigner;
-}
-
-function testTicketUsageOnly(bytes32 actionId, address user) 
-    public view returns (bool) {
-    bytes32 hash = keccak256(abi.encodePacked(actionId, user));
-    return usedTickets[hash];
-}
-
-*/
 }
